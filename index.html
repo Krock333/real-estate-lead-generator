@@ -66,7 +66,19 @@ color:gray;
 </style>
 
 </head>
+<script>
+function calculateScore() {
 
+let total = document.querySelectorAll('input[type="checkbox"]').length;
+let checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+
+let score = Math.round((checked / total) * 100);
+
+document.getElementById("score").innerHTML =
+"🏡 Your HomeReady Score is <strong>" + score + "%</strong>";
+
+}
+</script>
 <body>
 
 <header>
@@ -162,7 +174,11 @@ Start My Seller Checklist
 
 <br>
 
-<button>Calculate My HomeReady Score</button>
+<button onclick="calculateScore()">
+    Calculate My HomeReady Score
+</button>
+
+<p id="score"></p>
 
 <p>Your score will appear here.</p>
 
