@@ -69,15 +69,35 @@ color:gray;
 <script>
 function calculateScore() {
 
-let total = document.querySelectorAll('input[type="checkbox"]').length;
-let checked = document.querySelectorAll('input[type="checkbox"]:checked').length;
+    const boxes = document.querySelectorAll('#homeReadyChecklist input[type="checkbox"]');
+    const checkedBoxes = document.querySelectorAll('#homeReadyChecklist input[type="checkbox"]:checked');
 
-let score = Math.round((checked / total) * 100);
+    const score = Math.round((checkedBoxes.length / boxes.length) * 100);
 
-document.getElementById("score").innerHTML =
-"🏡 Your HomeReady Score is <strong>" + score + "%</strong>";
+    let color = "#2e7d32";
+    let title = "Ready to List!";
+    let advice = "";
 
-}
+    if (score < 40) {
+        color = "#c62828";
+        title = "Needs Preparation";
+        advice = "Focus on repairs, cleaning, curb appeal and maintenance before listing.";
+    } else if (score < 75) {
+        color = "#ef6c00";
+        title = "Almost Ready";
+        advice = "Finish the remaining checklist items and schedule professional photos.";
+    } else {
+        advice = "Congratulations! Contact Melissa to schedule your listing consultation.";
+    }
+
+    document.getElementById("score").innerHTML =
+        "<div style='border-left:6px solid " + color +
+        ";padding:15px;background:#f8f8f8;border-radius:8px;margin-top:20px;'>" +
+        "<h2 style='color:" + color + "'>🏡 HomeReady Score: " + score + "%</h2>" +
+        "<h3>" + title + "</h3>" +
+        "<p>" + advice + "</p>" +
+     "</div>";
+  }
 </script>
 <body>
 
@@ -158,7 +178,7 @@ Start My Seller Checklist
 © 2026 Melissa • United Real Estate Solutions
 
 </footer>
-<section style="background:#ffffff;padding:40px;margin-top:40px;border-radius:10px;">
+<section id="homeReadyChecklist" style="background:#ffffff;padding:40px;margin-top:40px;border-radius:10px;">
 <h2>🏡 HomeReady AI Seller Score</h2>
 
 <p>How ready is your home to list?</p>
