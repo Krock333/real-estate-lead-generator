@@ -6,7 +6,61 @@
 <title>Home Ready | Find the Right Real Estate Agent</title>
 
 <style>
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 16px 6%;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
 
+.brand {
+  color: #003366;
+  font-size: 1.4rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.nav-links a {
+  color: #243447;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.nav-links a:hover {
+  color: #007a5a;
+}
+
+.nav-button {
+  background: #007a5a;
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+@media (max-width: 760px) {
+  .navbar {
+    flex-wrap: wrap;
+  }
+
+  .nav-links {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+}
 body{
 font-family:Arial,Helvetica,sans-serif;
 background:#f4f4f4;
@@ -100,7 +154,7 @@ function calculateScore() {
   }
 </script>
 <body>
-
+<div class="container" id="get-started">
 <header>
 
 <h1>Home Ready</h1>
