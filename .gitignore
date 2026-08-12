@@ -1,0 +1,7 @@
+.vscode/
+node_modules/
+local.settings.json
+AzuriteConfig
+__azurite_db_*.json
+__blobstorage__/
+__queuestorage__/

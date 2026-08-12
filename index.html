@@ -3,10 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>Home Ready | Buyer and Seller Preparation</title>
 
   <style>
+    :root {
+      --navy: #003366;
+      --teal: #007a5a;
+      --teal-dark: #005f46;
+      --light: #f4f7f9;
+      --text: #243447;
+      --border: #dce3e8;
+      --warning: #fff8e1;
+      --warning-border: #e6a700;
+      --success: #edf9f5;
+    }
+
     * {
       box-sizing: border-box;
     }
@@ -18,8 +29,8 @@
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: #f4f7f9;
-      color: #243447;
+      background: var(--light);
+      color: var(--text);
       line-height: 1.6;
     }
 
@@ -37,7 +48,7 @@
     }
 
     .brand {
-      color: #003366;
+      color: var(--navy);
       font-size: 1.5rem;
       font-weight: 700;
       text-decoration: none;
@@ -50,24 +61,24 @@
     }
 
     .nav-links a {
-      color: #243447;
+      color: var(--text);
       font-weight: 600;
       text-decoration: none;
     }
 
     .nav-links a:hover {
-      color: #007a5a;
+      color: var(--teal);
     }
 
     .nav-button {
-      background: #007a5a;
+      background: var(--teal);
       color: #ffffff !important;
       padding: 10px 18px;
       border-radius: 8px;
     }
 
     .hero {
-      background: linear-gradient(135deg, #003366, #005f73);
+      background: linear-gradient(135deg, var(--navy), #005f73);
       color: white;
       padding: 75px 20px;
       text-align: center;
@@ -106,7 +117,7 @@
       display: inline-block;
       padding: 13px 22px;
       background: #ffffff;
-      color: #003366;
+      color: var(--navy);
       border-radius: 8px;
       font-weight: 700;
       text-decoration: none;
@@ -128,32 +139,36 @@
     }
 
     .section h2 {
-      color: #003366;
+      color: var(--navy);
       margin-top: 0;
     }
 
-    .checklist-grid {
+    .checklist-grid,
+    .feedback-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 25px;
     }
 
-    .checklist-card {
-      border: 1px solid #dce3e8;
+    .checklist-card,
+    .feedback-card {
+      border: 1px solid var(--border);
       border-radius: 10px;
       padding: 25px;
       background: #fbfcfd;
     }
 
-    .checklist-card h3 {
+    .checklist-card h3,
+    .feedback-card h3 {
       margin-top: 0;
-      color: #007a5a;
+      color: var(--teal);
     }
 
     .checklist-item {
       display: block;
       padding: 9px 0;
       cursor: pointer;
+      font-weight: 500;
     }
 
     .checklist-item input {
@@ -189,7 +204,7 @@
       padding: 14px;
       border: none;
       border-radius: 7px;
-      background: #007a5a;
+      background: var(--teal);
       color: white;
       font-size: 17px;
       font-weight: 700;
@@ -197,10 +212,16 @@
     }
 
     button:hover {
-      background: #005f46;
+      background: var(--teal-dark);
     }
 
-    .score-result {
+    button:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+
+    .score-result,
+    .message {
       margin-top: 20px;
     }
 
@@ -208,24 +229,38 @@
       display: none;
       margin-top: 20px;
       padding: 16px;
-      border-left: 6px solid #007a5a;
-      background: #edf9f5;
+      border-left: 6px solid var(--teal);
+      background: var(--success);
+      border-radius: 8px;
+    }
+
+    .error-message {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      border-left: 6px solid #c62828;
+      background: #fff0f0;
       border-radius: 8px;
     }
 
     .notice {
       margin-top: 18px;
       padding: 14px;
-      background: #fff8e1;
-      border-left: 5px solid #e6a700;
+      background: var(--warning);
+      border-left: 5px solid var(--warning-border);
       border-radius: 6px;
       font-size: 0.95rem;
+    }
+
+    .small {
+      font-size: 0.9rem;
+      color: #5c6873;
     }
 
     footer {
       margin-top: 40px;
       padding: 28px 20px;
-      background: #003366;
+      background: var(--navy);
       color: white;
       text-align: center;
     }
@@ -247,7 +282,8 @@
         font-size: 2.25rem;
       }
 
-      .checklist-grid {
+      .checklist-grid,
+      .feedback-grid {
         grid-template-columns: 1fr;
       }
 
@@ -260,13 +296,13 @@
 </head>
 
 <body>
-
   <nav class="navbar">
     <a class="brand" href="#top">Home Ready</a>
 
     <div class="nav-links">
       <a href="#buyer-checklist">Buyers</a>
       <a href="#seller-checklist">Sellers</a>
+      <a href="#feedback">Feedback</a>
       <a href="#contact" class="nav-button">Connect With an Agent</a>
     </div>
   </nav>
@@ -274,39 +310,28 @@
   <header class="hero" id="top">
     <div class="hero-content">
       <h1>Home Ready</h1>
-
-      <h2>Prepare to Buy or Sell With Confidence</h2>
+      <h2>Find Out How Ready You Are to Buy or Sell</h2>
 
       <p>
-        Use our free readiness checklists and connect with a trusted real
-        estate professional who understands your goals.
+        Complete a free readiness checklist, receive an instant score, and
+        connect with a trusted real estate professional when you are ready.
       </p>
 
       <div class="hero-buttons">
-        <a class="hero-button primary" href="#buyer-checklist">
-          I'm Buying
-        </a>
-
-        <a class="hero-button" href="#seller-checklist">
-          I'm Selling
-        </a>
-
-        <a class="hero-button" href="#contact">
-          Contact an Agent
-        </a>
+        <a class="hero-button primary" href="#buyer-checklist">I'm Buying</a>
+        <a class="hero-button" href="#seller-checklist">I'm Selling</a>
+        <a class="hero-button" href="#contact">Contact an Agent</a>
       </div>
     </div>
   </header>
 
   <main>
-
     <section class="section">
       <h2>How Home Ready Works</h2>
-
       <p>
-        Complete the checklist that matches your real estate goals, review
-        your readiness score, and request a free consultation when you are
-        ready for professional guidance.
+        Choose the buyer or seller checklist, check each step you have already
+        completed, and calculate your readiness score. Your score helps identify
+        what to do next and whether it may be time to speak with an agent.
       </p>
     </section>
 
@@ -314,52 +339,19 @@
       <h2>Buyer and Seller Readiness Checklists</h2>
 
       <div class="checklist-grid">
-
         <div class="checklist-card" id="buyer-checklist">
           <h3>🏠 Buyer Ready Checklist</h3>
-
           <p>Check each item you have completed.</p>
 
           <div id="buyerChecklist">
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have reviewed my credit.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I know my approximate home-buying budget.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have money saved for a down payment.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I understand estimated closing costs.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have spoken with a lender or received preapproval.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I know the area where I would like to live.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have identified my preferred moving timeline.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I am ready to work with a real estate agent.
-            </label>
+            <label class="checklist-item"><input type="checkbox">I have reviewed my credit.</label>
+            <label class="checklist-item"><input type="checkbox">I know my approximate home-buying budget.</label>
+            <label class="checklist-item"><input type="checkbox">I have money saved for a down payment.</label>
+            <label class="checklist-item"><input type="checkbox">I understand estimated closing costs.</label>
+            <label class="checklist-item"><input type="checkbox">I have spoken with a lender or received preapproval.</label>
+            <label class="checklist-item"><input type="checkbox">I know the area where I would like to live.</label>
+            <label class="checklist-item"><input type="checkbox">I have identified my preferred moving timeline.</label>
+            <label class="checklist-item"><input type="checkbox">I am ready to work with a real estate agent.</label>
           </div>
 
           <button type="button" onclick="calculateScore('buyer')">
@@ -371,49 +363,17 @@
 
         <div class="checklist-card" id="seller-checklist">
           <h3>🔑 Seller Ready Checklist</h3>
-
           <p>Check each item you have completed.</p>
 
           <div id="sellerChecklist">
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have decluttered the main rooms.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have completed important minor repairs.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              The interior and exterior are clean.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              The landscaping and curb appeal are ready.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I have an estimate of my home's value.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I know my approximate mortgage payoff amount.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I am prepared for photographs and showings.
-            </label>
-
-            <label class="checklist-item">
-              <input type="checkbox">
-              I am ready to speak with a listing agent.
-            </label>
+            <label class="checklist-item"><input type="checkbox">I have decluttered the main rooms.</label>
+            <label class="checklist-item"><input type="checkbox">I have completed important minor repairs.</label>
+            <label class="checklist-item"><input type="checkbox">The interior and exterior are clean.</label>
+            <label class="checklist-item"><input type="checkbox">The landscaping and curb appeal are ready.</label>
+            <label class="checklist-item"><input type="checkbox">I have an estimate of my home's value.</label>
+            <label class="checklist-item"><input type="checkbox">I know my approximate mortgage payoff amount.</label>
+            <label class="checklist-item"><input type="checkbox">I am prepared for photographs and showings.</label>
+            <label class="checklist-item"><input type="checkbox">I am ready to speak with a listing agent.</label>
           </div>
 
           <button type="button" onclick="calculateScore('seller')">
@@ -422,51 +382,28 @@
 
           <div class="score-result" id="sellerScore"></div>
         </div>
-
       </div>
     </section>
 
     <section class="section" id="contact">
       <h2>Connect With a Real Estate Professional</h2>
-
       <p>
-        Tell us whether you are buying, selling, or both. A trusted real
-        estate professional can follow up to discuss your goals.
+        Tell us whether you are buying, selling, or both. A trusted real estate
+        professional can follow up to discuss your goals.
       </p>
 
       <form id="leadForm">
-
         <label for="firstName">First Name</label>
-        <input
-          type="text"
-          id="firstName"
-          name="firstName"
-          required
-        >
+        <input type="text" id="firstName" name="firstName" required>
 
         <label for="lastName">Last Name</label>
-        <input
-          type="text"
-          id="lastName"
-          name="lastName"
-          required
-        >
+        <input type="text" id="lastName" name="lastName" required>
 
         <label for="email">Email Address</label>
-        <input
-          type="email"
-          id="email"
-          name="email"
-          required
-        >
+        <input type="email" id="email" name="email" required>
 
         <label for="phone">Phone Number</label>
-        <input
-          type="tel"
-          id="phone"
-          name="phone"
-          required
-        >
+        <input type="tel" id="phone" name="phone" required>
 
         <label for="interest">I am interested in:</label>
         <select id="interest" name="interest" required>
@@ -495,24 +432,98 @@
           placeholder="Preferred location, price range, property needs, or other information"
         ></textarea>
 
-        <button type="submit">
-          Request My Free Consultation
-        </button>
+        <label class="small">
+          <input type="checkbox" id="consent" required style="width:auto;margin-right:8px;">
+          I agree that Home Ready may contact me about my real estate goals.
+        </label>
+
+        <button type="submit">Request My Free Consultation</button>
 
         <div class="success-message" id="successMessage">
-          <strong>Thank you!</strong>
-          Your information passed the form validation successfully.
+          <strong>Thank you!</strong> Your information was submitted successfully.
         </div>
 
-        <div class="notice">
-          Development notice: The form is not connected to the lead database
-          yet. We will connect it before the public launch so submitted leads
-          are securely saved and available for follow-up.
+        <div class="error-message" id="errorMessage">
+          We could not submit your information. Please try again.
         </div>
-
       </form>
     </section>
 
+    <section class="section" id="feedback">
+      <h2>Help Us Improve Home Ready</h2>
+      <p>
+        Phase 1 includes two feedback forms. For now, these forms collect the
+        answers on the page. In the next development step, we will connect them
+        to Azure so the feedback is saved.
+      </p>
+
+      <div class="feedback-grid">
+        <form class="feedback-card" id="consumerFeedbackForm">
+          <h3>Buyer or Seller Feedback</h3>
+
+          <label for="consumerRating">Overall Rating</label>
+          <select id="consumerRating" required>
+            <option value="">Select one</option>
+            <option value="5">5 — Excellent</option>
+            <option value="4">4 — Good</option>
+            <option value="3">3 — Average</option>
+            <option value="2">2 — Needs improvement</option>
+            <option value="1">1 — Poor</option>
+          </select>
+
+          <label for="consumerHelpful">Was your readiness score helpful?</label>
+          <select id="consumerHelpful" required>
+            <option value="">Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="Somewhat">Somewhat</option>
+            <option value="No">No</option>
+          </select>
+
+          <label for="consumerComments">What should we improve?</label>
+          <textarea id="consumerComments" rows="5"></textarea>
+
+          <button type="submit">Submit Buyer/Seller Feedback</button>
+          <div class="success-message" id="consumerFeedbackSuccess">
+            Thank you. Your feedback has been recorded for this test session.
+          </div>
+        </form>
+
+        <form class="feedback-card" id="agentFeedbackForm">
+          <h3>Real Estate Agent Feedback</h3>
+
+          <label for="agentRating">Lead Quality</label>
+          <select id="agentRating" required>
+            <option value="">Select one</option>
+            <option value="5">5 — Excellent</option>
+            <option value="4">4 — Good</option>
+            <option value="3">3 — Average</option>
+            <option value="2">2 — Needs improvement</option>
+            <option value="1">1 — Poor</option>
+          </select>
+
+          <label for="agentContacted">Were you able to contact the lead?</label>
+          <select id="agentContacted" required>
+            <option value="">Select one</option>
+            <option value="Yes">Yes</option>
+            <option value="No">No</option>
+            <option value="Not yet">Not yet</option>
+          </select>
+
+          <label for="agentComments">What information would make the lead more valuable?</label>
+          <textarea id="agentComments" rows="5"></textarea>
+
+          <button type="submit">Submit Agent Feedback</button>
+          <div class="success-message" id="agentFeedbackSuccess">
+            Thank you. Your feedback has been recorded for this test session.
+          </div>
+        </form>
+      </div>
+
+      <div class="notice">
+        Phase 1 note: lead submissions are connected to Azure. Feedback forms
+        still need their own Azure endpoint before public launch.
+      </div>
+    </section>
   </main>
 
   <footer>
@@ -520,6 +531,9 @@
   </footer>
 
   <script>
+    const API_URL =
+      "https://home-ready-api-hfd3ewgphbhuafeh.eastus2-01.azurewebsites.net/api/savelead";
+
     function calculateScore(type) {
       const checklistId =
         type === "buyer" ? "buyerChecklist" : "sellerChecklist";
@@ -542,43 +556,113 @@
       let color = "#2e7d32";
       let title = "Ready to Connect";
       let advice =
-        "You have completed most of the preparation steps. Consider connecting with an agent.";
+        "You have completed most preparation steps. Consider connecting with a real estate professional.";
 
       if (score < 40) {
         color = "#c62828";
         title = "Getting Started";
-
         advice =
           "You are at the beginning of the process. Focus on the unchecked preparation steps.";
       } else if (score < 75) {
         color = "#ef6c00";
         title = "Almost Ready";
-
         advice =
           "You have made good progress. Complete the remaining items and consider speaking with a professional.";
       }
 
       document.getElementById(resultId).innerHTML =
-        "<div style='border-left:6px solid " + color +
+        "<div style='border-left:6px solid " +
+        color +
         ";padding:15px;background:#f8f8f8;border-radius:8px;'>" +
-        "<h3 style='color:" + color + ";margin-top:0;'>" +
-        score + "% Ready — " + title +
+        "<h3 style='color:" +
+        color +
+        ";margin-top:0;'>" +
+        score +
+        "% Ready — " +
+        title +
         "</h3>" +
-        "<p>" + advice + "</p>" +
+        "<p>" +
+        advice +
+        "</p>" +
         "<a href='#contact' style='color:#007a5a;font-weight:700;'>" +
         "Connect with an agent →" +
         "</a>" +
         "</div>";
     }
 
-    document
-      .getElementById("leadForm")
-      .addEventListener("submit", function(event) {
-        event.preventDefault();
+    const leadForm = document.getElementById("leadForm");
 
-        document.getElementById("successMessage").style.display = "block";
+    leadForm.addEventListener("submit", async function (event) {
+      event.preventDefault();
+
+      const submitButton = leadForm.querySelector('button[type="submit"]');
+      const successMessage = document.getElementById("successMessage");
+      const errorMessage = document.getElementById("errorMessage");
+
+      successMessage.style.display = "none";
+      errorMessage.style.display = "none";
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
+
+      const lead = {
+        firstName: leadForm.firstName.value.trim(),
+        lastName: leadForm.lastName.value.trim(),
+        email: leadForm.email.value.trim(),
+        phone: leadForm.phone.value.trim(),
+        interest: leadForm.interest.value,
+        timeline: leadForm.timeline.value,
+        goals: leadForm.goals.value.trim()
+      };
+
+      try {
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(lead)
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            "Server returned " + response.status + ": " + errorText
+          );
+        }
+
+        successMessage.style.display = "block";
+        leadForm.reset();
+
+        successMessage.scrollIntoView({
+          behavior: "smooth",
+          block: "center"
+        });
+      } catch (error) {
+        console.error("Lead submission failed:", error);
+        errorMessage.style.display = "block";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Request My Free Consultation";
+      }
+    });
+
+    document
+      .getElementById("consumerFeedbackForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+        document.getElementById("consumerFeedbackSuccess").style.display =
+          "block";
+        event.target.reset();
+      });
+
+    document
+      .getElementById("agentFeedbackForm")
+      .addEventListener("submit", function (event) {
+        event.preventDefault();
+        document.getElementById("agentFeedbackSuccess").style.display =
+          "block";
+        event.target.reset();
       });
   </script>
-
 </body>
 </html>
