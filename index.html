@@ -449,19 +449,38 @@
     </section>
 
     <section class="section" id="feedback">
-      <h2>Help Us Improve Home Ready</h2>
+      <h2>Share Feedback</h2>
       <p>
-        Phase 1 includes two feedback forms. For now, these forms collect the
-        answers on the page. In the next development step, we will connect them
-        to Azure so the feedback is saved.
+        Your feedback helps Melissa and Home Ready improve the experience for
+        buyers and sellers. Choose the form that applies to you.
       </p>
 
       <div class="feedback-grid">
         <form class="feedback-card" id="consumerFeedbackForm">
           <h3>Buyer or Seller Feedback</h3>
 
+          <label for="consumerName">Your Name</label>
+          <input type="text" id="consumerName" name="name" required>
+
+          <label for="consumerEmail">Your Email</label>
+          <input type="email" id="consumerEmail" name="email" required>
+
+          <label for="consumerRole">I am a:</label>
+          <select id="consumerRole" name="role" required>
+            <option value="">Select one</option>
+            <option value="Buyer">Buyer</option>
+            <option value="Seller">Seller</option>
+          </select>
+
+          <label for="feedbackRecipient">Who is this feedback for?</label>
+          <select id="feedbackRecipient" name="recipient" required>
+            <option value="">Select one</option>
+            <option value="melissa">Melissa LaChance</option>
+            <option value="home-ready">Home Ready</option>
+          </select>
+
           <label for="consumerRating">Overall Rating</label>
-          <select id="consumerRating" required>
+          <select id="consumerRating" name="rating" required>
             <option value="">Select one</option>
             <option value="5">5 — Excellent</option>
             <option value="4">4 — Good</option>
@@ -470,28 +489,28 @@
             <option value="1">1 — Poor</option>
           </select>
 
-          <label for="consumerHelpful">Was your readiness score helpful?</label>
-          <select id="consumerHelpful" required>
-            <option value="">Select one</option>
-            <option value="Yes">Yes</option>
-            <option value="Somewhat">Somewhat</option>
-            <option value="No">No</option>
-          </select>
+          <label for="consumerComments">Comments</label>
+          <textarea id="consumerComments" name="comments" rows="5" required></textarea>
 
-          <label for="consumerComments">What should we improve?</label>
-          <textarea id="consumerComments" rows="5"></textarea>
-
-          <button type="submit">Submit Buyer/Seller Feedback</button>
+          <button type="submit">Send Feedback</button>
           <div class="success-message" id="consumerFeedbackSuccess">
-            Thank you. Your feedback has been recorded for this test session.
+            Thank you. Your feedback was sent successfully.
+          </div>
+          <div class="error-message" id="consumerFeedbackError">
+            We could not send your feedback. Please try again.
           </div>
         </form>
 
         <form class="feedback-card" id="agentFeedbackForm">
-          <h3>Real Estate Agent Feedback</h3>
+          <h3>Agent Feedback for Home Ready</h3>
+
+          <label for="agentName">Agent</label>
+          <select id="agentName" name="agent" required>
+            <option value="melissa">Melissa LaChance</option>
+          </select>
 
           <label for="agentRating">Lead Quality</label>
-          <select id="agentRating" required>
+          <select id="agentRating" name="rating" required>
             <option value="">Select one</option>
             <option value="5">5 — Excellent</option>
             <option value="4">4 — Good</option>
@@ -501,28 +520,31 @@
           </select>
 
           <label for="agentContacted">Were you able to contact the lead?</label>
-          <select id="agentContacted" required>
+          <select id="agentContacted" name="contacted" required>
             <option value="">Select one</option>
             <option value="Yes">Yes</option>
             <option value="No">No</option>
             <option value="Not yet">Not yet</option>
           </select>
 
-          <label for="agentComments">What information would make the lead more valuable?</label>
-          <textarea id="agentComments" rows="5"></textarea>
+          <label for="agentComments">Comments or Suggestions</label>
+          <textarea id="agentComments" name="comments" rows="5" required></textarea>
 
-          <button type="submit">Submit Agent Feedback</button>
+          <button type="submit">Send Feedback to Home Ready</button>
           <div class="success-message" id="agentFeedbackSuccess">
-            Thank you. Your feedback has been recorded for this test session.
+            Thank you. Your feedback was sent to Home Ready.
+          </div>
+          <div class="error-message" id="agentFeedbackError">
+            We could not send your feedback. Please try again.
           </div>
         </form>
       </div>
 
-      <div class="notice">
-        Phase 1 note: lead submissions are connected to Azure. Feedback forms
-        still need their own Azure endpoint before public launch.
-      </div>
+      <p class="small">
+        Feedback is shared only with its intended recipient and Home Ready administration.
+      </p>
     </section>
+
   </main>
 
   <footer>
@@ -530,8 +552,13 @@
   </footer>
 
   <script>
+    const latestAssessment = { type: "", score: "" };
+
     const API_URL =
       "https://home-ready-api-hfd3ewgphbhuafeh.eastus2-01.azurewebsites.net/api/savelead";
+
+    const FEEDBACK_API_URL =
+      "https://home-ready-api-hfd3ewgphbhuafeh.eastus2-01.azurewebsites.net/api/savefeedback";
 
     function calculateScore(type) {
       const checklistId =
@@ -551,6 +578,9 @@
       const score = Math.round(
         (checkedBoxes.length / boxes.length) * 100
       );
+
+      latestAssessment.type = type;
+      latestAssessment.score = score;
 
       let color = "#2e7d32";
       let title = "Ready to Connect";
@@ -610,7 +640,9 @@
         phone: leadForm.phone.value.trim(),
         interest: leadForm.interest.value,
         timeline: leadForm.timeline.value,
-        goals: leadForm.goals.value.trim()
+        goals: leadForm.goals.value.trim(),
+        assessmentType: latestAssessment.type,
+        readinessScore: latestAssessment.score
       };
 
       try {
@@ -645,22 +677,65 @@
       }
     });
 
-    document
-      .getElementById("consumerFeedbackForm")
+    async function submitFeedback(form, payload, successId, errorId) {
+      const button = form.querySelector('button[type="submit"]');
+      const originalText = button.textContent;
+      const success = document.getElementById(successId);
+      const error = document.getElementById(errorId);
+
+      success.style.display = "none";
+      error.style.display = "none";
+      button.disabled = true;
+      button.textContent = "Sending...";
+
+      try {
+        const response = await fetch(FEEDBACK_API_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error("Feedback request failed with status " + response.status);
+        }
+
+        success.style.display = "block";
+        form.reset();
+      } catch (submissionError) {
+        console.error("Feedback submission failed:", submissionError);
+        error.style.display = "block";
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    document.getElementById("consumerFeedbackForm")
       .addEventListener("submit", function (event) {
         event.preventDefault();
-        document.getElementById("consumerFeedbackSuccess").style.display =
-          "block";
-        event.target.reset();
+        const form = event.currentTarget;
+        submitFeedback(form, {
+          feedbackType: "consumer",
+          name: form.name.value.trim(),
+          email: form.email.value.trim(),
+          role: form.role.value,
+          recipient: form.recipient.value,
+          rating: form.rating.value,
+          comments: form.comments.value.trim()
+        }, "consumerFeedbackSuccess", "consumerFeedbackError");
       });
 
-    document
-      .getElementById("agentFeedbackForm")
+    document.getElementById("agentFeedbackForm")
       .addEventListener("submit", function (event) {
         event.preventDefault();
-        document.getElementById("agentFeedbackSuccess").style.display =
-          "block";
-        event.target.reset();
+        const form = event.currentTarget;
+        submitFeedback(form, {
+          feedbackType: "agent",
+          agent: form.agent.value,
+          rating: form.rating.value,
+          contacted: form.contacted.value,
+          comments: form.comments.value.trim()
+        }, "agentFeedbackSuccess", "agentFeedbackError");
       });
   </script>
 </body>
