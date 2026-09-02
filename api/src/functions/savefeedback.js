@@ -15,6 +15,10 @@ function clean(value, maxLength = 2000) {
   return String(value || "").trim().slice(0, maxLength);
 }
 
+function isEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
 function escapeHtml(value) {
   return clean(value).replace(/[&<>"']/g, character => ({
     "&": "&amp;",
@@ -74,9 +78,16 @@ app.http("savefeedback", {
       const rating = clean(body.rating, 1);
       const comments = clean(body.comments, 4000);
 
+      const name = clean(body.name, 120);
+      const email = clean(body.email, 254).toLowerCase();
+      const role = clean(body.role, 30);
+      const recipient = clean(body.recipient, 30);
+      const agent = clean(body.agent, 30);
+      const contacted = clean(body.contacted, 30);
+
       if (
         !["consumer", "agent"].includes(feedbackType) ||
-        !rating ||
+        !["1", "2", "3", "4", "5"].includes(rating) ||
         !comments
       ) {
         return {
@@ -84,6 +95,35 @@ app.http("savefeedback", {
           headers: corsHeaders,
           jsonBody: {
             message: "Required feedback fields are missing."
+          }
+        };
+      }
+
+      if (
+        feedbackType === "consumer" &&
+        (!name ||
+          !isEmail(email) ||
+          !["buyer", "seller"].includes(role) ||
+          !["melissa", "home-ready"].includes(recipient))
+      ) {
+        return {
+          status: 400,
+          headers: corsHeaders,
+          jsonBody: {
+            message: "Please complete all buyer or seller feedback fields."
+          }
+        };
+      }
+
+      if (
+        feedbackType === "agent" &&
+        (agent !== "melissa" || !["yes", "no"].includes(contacted))
+      ) {
+        return {
+          status: 400,
+          headers: corsHeaders,
+          jsonBody: {
+            message: "Please complete all agent feedback fields."
           }
         };
       }
@@ -100,12 +140,12 @@ app.http("savefeedback", {
         feedbackType,
         rating,
         comments,
-        name: clean(body.name, 120),
-        email: clean(body.email, 254),
-        role: clean(body.role, 30),
-        recipient: clean(body.recipient, 30),
-        agent: clean(body.agent, 30),
-        contacted: clean(body.contacted, 30),
+        name,
+        email,
+        role,
+        recipient,
+        agent,
+        contacted,
         createdAt: new Date().toISOString(),
         emailStatus: "pending"
       };
@@ -136,21 +176,6 @@ app.http("savefeedback", {
       let emailMessage;
 
       if (feedbackType === "consumer") {
-        if (
-          !entity.name ||
-          !entity.email ||
-          !entity.role ||
-          !entity.recipient
-        ) {
-          return {
-            status: 400,
-            headers: corsHeaders,
-            jsonBody: {
-              message: "Consumer details are incomplete."
-            }
-          };
-        }
-
         const isForMelissa = entity.recipient === "melissa";
 
         emailMessage = {
@@ -204,24 +229,31 @@ app.http("savefeedback", {
         );
       }
 
-      await sendEmail(emailMessage);
+      let emailStatus = "sent";
 
-      await table.updateEntity(
-        {
-          partitionKey: entity.partitionKey,
-          rowKey: entity.rowKey,
-          emailStatus: "sent"
-        },
-        "Merge"
-      );
+      try {
+        await sendEmail(emailMessage);
+      } catch (emailError) {
+        emailStatus = "failed";
+        context.error("Feedback saved but email delivery failed", emailError);
+      }
+
+      await table.updateEntity({
+        partitionKey: entity.partitionKey,
+        rowKey: entity.rowKey,
+        emailStatus
+      }, "Merge");
 
       return {
-        status: 200,
+        status: emailStatus === "sent" ? 201 : 202,
         headers: corsHeaders,
         jsonBody: {
-          message:
-            "Feedback saved and emailed successfully.",
-          feedbackId
+          success: true,
+          message: emailStatus === "sent"
+            ? "Feedback saved and emailed successfully."
+            : "Feedback was saved. Email delivery is pending.",
+          feedbackId,
+          emailStatus
         }
       };
     } catch (error) {
