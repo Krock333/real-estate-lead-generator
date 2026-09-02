@@ -12,7 +12,44 @@ const corsHeaders = {
 };
 
 function clean(value, maxLength = 2000) {
-  return String(value || "").trim().slice(0, maxLength);
+  return String(value ?? "").trim().slice(0, maxLength);
+}
+
+function normalize(value, maxLength = 100) {
+  return clean(value, maxLength).toLowerCase();
+}
+
+function normalizeRecipient(value) {
+  const recipient = normalize(value)
+    .replace(/_/g, "-")
+    .replace(/\s+/g, "-");
+
+  if (recipient === "melissa-lachance") {
+    return "melissa";
+  }
+
+  if (recipient === "homeready") {
+    return "home-ready";
+  }
+
+  return recipient;
+}
+
+function normalizeAgent(value) {
+  const agent = normalize(value)
+    .replace(/_/g, "-")
+    .replace(/\s+/g, "-");
+
+  if (agent === "melissa-lachance") {
+    return "melissa";
+  }
+
+  return agent;
+}
+
+function normalizeRating(value) {
+  const match = clean(value, 30).match(/[1-5]/);
+  return match ? match[0] : "";
 }
 
 function isEmail(value) {
@@ -20,7 +57,7 @@ function isEmail(value) {
 }
 
 function escapeHtml(value) {
-  return clean(value).replace(/[&<>"']/g, character => ({
+  return String(value ?? "").replace(/[&<>"']/g, character => ({
     "&": "&amp;",
     "<": "&lt;",
     ">": "&gt;",
@@ -37,25 +74,39 @@ async function sendEmail({ to, cc, subject, html, replyTo }) {
     throw new Error("Email delivery is not configured.");
   }
 
+  if (!to) {
+    throw new Error("The recipient email is not configured.");
+  }
+
+  const emailBody = {
+    from,
+    to: Array.isArray(to) ? to : [to],
+    subject,
+    html
+  };
+
+  if (cc) {
+    emailBody.cc = Array.isArray(cc) ? cc : [cc];
+  }
+
+  if (replyTo) {
+    emailBody.reply_to = replyTo;
+  }
+
   const response = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-      from,
-      to: Array.isArray(to) ? to : [to],
-      cc: cc ? (Array.isArray(cc) ? cc : [cc]) : undefined,
-      reply_to: replyTo || undefined,
-      subject,
-      html
-    })
+    body: JSON.stringify(emailBody)
   });
 
   if (!response.ok) {
+    const errorText = await response.text();
+
     throw new Error(
-      `Email provider returned ${response.status}: ${await response.text()}`
+      `Email provider returned ${response.status}: ${errorText}`
     );
   }
 }
@@ -73,59 +124,142 @@ app.http("savefeedback", {
     }
 
     try {
-      const body = await request.json();
-      const feedbackType = clean(body.feedbackType, 20);
-      const rating = clean(body.rating, 1);
+      let body;
+
+      try {
+        body = await request.json();
+      } catch {
+        return {
+          status: 400,
+          headers: corsHeaders,
+          jsonBody: {
+            success: false,
+            message: "The feedback request must contain valid information."
+          }
+        };
+      }
+
+      const feedbackType = normalize(body.feedbackType, 20);
+      const rating = normalizeRating(body.rating);
       const comments = clean(body.comments, 4000);
 
       const name = clean(body.name, 120);
-      const email = clean(body.email, 254).toLowerCase();
-      const role = clean(body.role, 30);
-      const recipient = clean(body.recipient, 30);
-      const agent = clean(body.agent, 30);
-      const contacted = clean(body.contacted, 30);
+      const email = normalize(body.email, 254);
+      const role = normalize(body.role, 30);
+      const recipient = normalizeRecipient(body.recipient);
 
-      if (
-        !["consumer", "agent"].includes(feedbackType) ||
-        !["1", "2", "3", "4", "5"].includes(rating) ||
-        !comments
-      ) {
+      const agent = normalizeAgent(body.agent);
+      const contacted = normalize(body.contacted, 30);
+
+      if (!["consumer", "agent"].includes(feedbackType)) {
         return {
           status: 400,
           headers: corsHeaders,
           jsonBody: {
-            message: "Required feedback fields are missing."
+            success: false,
+            message: "Please select a valid feedback form."
           }
         };
       }
 
-      if (
-        feedbackType === "consumer" &&
-        (!name ||
-          !isEmail(email) ||
-          !["buyer", "seller"].includes(role) ||
-          !["melissa", "home-ready"].includes(recipient))
-      ) {
+      if (!rating) {
         return {
           status: 400,
           headers: corsHeaders,
           jsonBody: {
-            message: "Please complete all buyer or seller feedback fields."
+            success: false,
+            message: "Please select a rating from 1 through 5."
           }
         };
       }
 
-      if (
-        feedbackType === "agent" &&
-        (agent !== "melissa" || !["yes", "no"].includes(contacted))
-      ) {
+      if (!comments) {
         return {
           status: 400,
           headers: corsHeaders,
           jsonBody: {
-            message: "Please complete all agent feedback fields."
+            success: false,
+            message: "Please enter your comments or suggestions."
           }
         };
+      }
+
+      if (feedbackType === "consumer") {
+        if (!name) {
+          return {
+            status: 400,
+            headers: corsHeaders,
+            jsonBody: {
+              success: false,
+              message: "Please enter your name."
+            }
+          };
+        }
+
+        if (!isEmail(email)) {
+          return {
+            status: 400,
+            headers: corsHeaders,
+            jsonBody: {
+              success: false,
+              message: "Please enter a valid email address."
+            }
+          };
+        }
+
+        if (!["buyer", "seller"].includes(role)) {
+          return {
+            status: 400,
+            headers: corsHeaders,
+            jsonBody: {
+              success: false,
+              message: "Please select Buyer or Seller."
+            }
+          };
+        }
+
+        if (!["melissa", "home-ready"].includes(recipient)) {
+          return {
+            status: 400,
+            headers: corsHeaders,
+            jsonBody: {
+              success: false,
+              message: "Please select who should receive your feedback."
+            }
+          };
+        }
+      }
+
+      if (feedbackType === "agent") {
+        if (agent !== "melissa") {
+          return {
+            status: 400,
+            headers: corsHeaders,
+            jsonBody: {
+              success: false,
+              message: "Please select Melissa LaChance as the agent."
+            }
+          };
+        }
+
+        if (!["yes", "no"].includes(contacted)) {
+          return {
+            status: 400,
+            headers: corsHeaders,
+            jsonBody: {
+              success: false,
+              message: "Please indicate whether the lead was contacted."
+            }
+          };
+        }
+      }
+
+      const connectionString =
+        process.env.AZURE_STORAGE_CONNECTION_STRING ||
+        process.env.AzureWebJobsStorage;
+
+      if (!connectionString) {
+        throw new Error("Azure Storage is not configured.");
       }
 
       const feedbackId = crypto.randomUUID();
@@ -150,83 +284,104 @@ app.http("savefeedback", {
         emailStatus: "pending"
       };
 
-      const connectionString =
-        process.env.AZURE_STORAGE_CONNECTION_STRING ||
-        process.env.AzureWebJobsStorage;
-
-      if (!connectionString) {
-        throw new Error("Azure Storage is not configured.");
-      }
-
       const table = TableClient.fromConnectionString(
         connectionString,
         "Feedback"
       );
 
-      await table.createTable().catch(error => {
+      try {
+        await table.createTable();
+      } catch (error) {
         if (error.statusCode !== 409) {
           throw error;
         }
-      });
+      }
 
       await table.createEntity(entity);
 
-      const adminEmail = process.env.HOME_READY_ADMIN_EMAIL;
-      const melissaEmail = process.env.MELISSA_AGENT_EMAIL;
+      const adminEmail = clean(
+        process.env.HOME_READY_ADMIN_EMAIL,
+        254
+      );
+
+      const melissaEmail = clean(
+        process.env.MELISSA_AGENT_EMAIL,
+        254
+      );
+
       let emailMessage;
 
       if (feedbackType === "consumer") {
-        const isForMelissa = entity.recipient === "melissa";
+        const isForMelissa = recipient === "melissa";
+
+        if (!adminEmail) {
+          throw new Error(
+            "The Home Ready administrator email is not configured."
+          );
+        }
+
+        if (isForMelissa && !melissaEmail) {
+          throw new Error(
+            "Melissa's agent email is not configured."
+          );
+        }
 
         emailMessage = {
           to: isForMelissa ? melissaEmail : adminEmail,
           cc: isForMelissa ? adminEmail : undefined,
-          replyTo: entity.email,
+          replyTo: email,
           subject:
-            `${entity.role} feedback for ` +
+            `${role === "buyer" ? "Buyer" : "Seller"} feedback for ` +
             `${isForMelissa ? "Melissa LaChance" : "Home Ready"}`,
           html: `
             <h2>New Home Ready Feedback</h2>
-            <p><strong>From:</strong>
-              ${escapeHtml(entity.name)}
-              (${escapeHtml(entity.email)})
+            <p>
+              <strong>From:</strong>
+              ${escapeHtml(name)} (${escapeHtml(email)})
             </p>
-            <p><strong>Role:</strong>
-              ${escapeHtml(entity.role)}
+            <p>
+              <strong>Role:</strong>
+              ${escapeHtml(role === "buyer" ? "Buyer" : "Seller")}
             </p>
-            <p><strong>Rating:</strong>
-              ${escapeHtml(entity.rating)} / 5
+            <p>
+              <strong>Recipient:</strong>
+              ${escapeHtml(
+                isForMelissa ? "Melissa LaChance" : "Home Ready"
+              )}
+            </p>
+            <p>
+              <strong>Rating:</strong>
+              ${escapeHtml(rating)} / 5
             </p>
             <p><strong>Comments:</strong></p>
-            <p>${escapeHtml(entity.comments)}</p>
+            <p>${escapeHtml(comments)}</p>
           `
         };
       } else {
+        if (!adminEmail) {
+          throw new Error(
+            "The Home Ready administrator email is not configured."
+          );
+        }
+
         emailMessage = {
           to: adminEmail,
           subject: "Agent feedback from Melissa LaChance",
           html: `
             <h2>New Agent Feedback</h2>
             <p><strong>Agent:</strong> Melissa LaChance</p>
-            <p><strong>Lead quality:</strong>
-              ${escapeHtml(entity.rating)} / 5
+            <p>
+              <strong>Lead quality:</strong>
+              ${escapeHtml(rating)} / 5
             </p>
-            <p><strong>Contacted lead:</strong>
-              ${escapeHtml(entity.contacted)}
+            <p>
+              <strong>Contacted lead:</strong>
+              ${escapeHtml(contacted === "yes" ? "Yes" : "No")}
             </p>
             <p><strong>Comments:</strong></p>
-            <p>${escapeHtml(entity.comments)}</p>
+            <p>${escapeHtml(comments)}</p>
           `
         };
-      }
-
-      if (
-        !emailMessage.to ||
-        (entity.recipient === "melissa" && !melissaEmail)
-      ) {
-        throw new Error(
-          "Feedback recipient email is not configured."
-        );
       }
 
       let emailStatus = "sent";
@@ -235,23 +390,31 @@ app.http("savefeedback", {
         await sendEmail(emailMessage);
       } catch (emailError) {
         emailStatus = "failed";
-        context.error("Feedback saved but email delivery failed", emailError);
+
+        context.error(
+          "Feedback saved but email delivery failed",
+          emailError
+        );
       }
 
-      await table.updateEntity({
-        partitionKey: entity.partitionKey,
-        rowKey: entity.rowKey,
-        emailStatus
-      }, "Merge");
+      await table.updateEntity(
+        {
+          partitionKey: entity.partitionKey,
+          rowKey: entity.rowKey,
+          emailStatus
+        },
+        "Merge"
+      );
 
       return {
         status: emailStatus === "sent" ? 201 : 202,
         headers: corsHeaders,
         jsonBody: {
           success: true,
-          message: emailStatus === "sent"
-            ? "Feedback saved and emailed successfully."
-            : "Feedback was saved. Email delivery is pending.",
+          message:
+            emailStatus === "sent"
+              ? "Thank you! Your feedback was saved and emailed."
+              : "Thank you! Your feedback was saved, but the email is pending.",
           feedbackId,
           emailStatus
         }
@@ -263,7 +426,9 @@ app.http("savefeedback", {
         status: 500,
         headers: corsHeaders,
         jsonBody: {
-          message: "Feedback could not be processed."
+          success: false,
+          message:
+            "We could not process your feedback. Please try again."
         }
       };
     }
